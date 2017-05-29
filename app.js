@@ -5,18 +5,18 @@ console.log("Starting looking for house");
 var http = require('http');
 var cheerio = require('cheerio');
 var nodemailer = require('nodemailer');
-var config = require('config');
+var config = require('./config');
 
 var options = {
     host: 'www.funda.nl',
-    path: '/huur/amsterdam/+10km/700-1150/sorteer-datum-af/'
+    path: '/huur/amsterdam/+10km/700-1250/sorteer-datum-af/'
 };
 
 var housingOffers = [];
 
 var sendEmailFunction = function (houseUrl) {
 
-// create reusable transporter object using the default SMTP transport
+    // create reusable transporter object using the default SMTP transport
     var transportOptions = {
         host: config.host,
         port: 465,
@@ -28,7 +28,7 @@ var sendEmailFunction = function (houseUrl) {
     }
     var transporter = nodemailer.createTransport(transportOptions);
 
-// setup e-mail data with unicode symbols
+    // setup e-mail data with unicode symbols
     var mailOptions = {
         from: config.mailFrom, // sender address
         to: config.mailTo, // list of receivers
@@ -37,7 +37,7 @@ var sendEmailFunction = function (houseUrl) {
     };
 
 
-// send mail with defined transport object
+    // send mail with defined transport object
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             return console.log(error);
@@ -47,9 +47,14 @@ var sendEmailFunction = function (houseUrl) {
 };
 
 var refreshHousingData = function (sendEmail) {
-    return function() {
+    return function () {
         console.log(new Date() + " New check in progress");
-        http.get(options, function (res) {
+
+
+        http.get({
+            host: requestOptionsUrl,
+            path: requestOptionsPath
+        }, function (res) {
             res.setEncoding("utf8");
             var content = "";
             res.on("data", function (chunk) {
@@ -72,9 +77,15 @@ var refreshHousingData = function (sendEmail) {
     };
 };
 
-var interval = setInterval(refreshHousingData(true), 1000 * 60 * 60);
+var interval = setInterval(refreshHousingData(true), 1000 * 60 * 60 * 3);
 
 var stdin = process.openStdin();
+var requestOptionsUrl = process.env.HOUSE_FINDER_URL || options.host;
+var requestOptionsPath = process.env.HOUSE_FINDER_PATH || options.path;
+
+console.log(`requestOptionsUrl: ${requestOptionsUrl}`);
+console.log(`requestOptionsPath:  ${requestOptionsPath}`);
+
 refreshHousingData(false)();
 
 stdin.addListener("data", function (d) {
@@ -85,3 +96,17 @@ stdin.addListener("data", function (d) {
     console.log("Exiting application");
     process.exit();
 });
+
+
+//Express app
+const express = require('express')
+const app = express()
+
+app.get('/', function (req, res) {
+    res.sendStatus(200);
+})
+
+app.listen(8080, function () {
+    console.log('Funda house finder healthcheck works on port 8080!')
+})
+

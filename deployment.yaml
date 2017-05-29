@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: funda_house_finder_amsterdam
+  labels:
+    name: funda_house_finder
+    city: utrecht
+spec:
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: funda_house_finder
+    spec:
+      containers:
+      - image: localhost:5000/funda_house_finder
+        name: funda_house_finder
+        resources:
+          requests:
+            cpu: "20m"
+            memory: "120M"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 90
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+        env:
+        - name:  HOUSE_FINDER_URL
+          value:  "www.funda.nl"
+        - name: HOUSE_FINDER_PATH
+          value: /huur/utrecht/+5km/700-1250/sorteer-datum-af/
+      restartPolicy: OnFailure
+      imagePullPolicy: IfNotPresent
