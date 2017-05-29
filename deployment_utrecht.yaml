@@ -1,9 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: funda_house_finder_amsterdam
+  name: funda-house-finder-utrecht
   labels:
-    name: funda_house_finder
+    name: funda-house-finder
     city: utrecht
 spec:
   strategy:
@@ -11,11 +11,11 @@ spec:
   template:
     metadata:
       labels:
-        name: funda_house_finder
+        name: funda-house-finder-image-utrecht
     spec:
       containers:
-      - image: localhost:5000/funda_house_finder
-        name: funda_house_finder
+      - image: localhost:5000/funda_house_finder:v0.2
+        name: funda-house-finder-utrecht
         resources:
           requests:
             cpu: "20m"
@@ -36,6 +36,5 @@ spec:
         - name:  HOUSE_FINDER_URL
           value:  "www.funda.nl"
         - name: HOUSE_FINDER_PATH
-          value: /huur/utrecht/+5km/700-1250/sorteer-datum-af/
-      restartPolicy: OnFailure
-      imagePullPolicy: IfNotPresent
+          value: "/huur/utrecht/+5km/700-1250/sorteer-datum-af/"
+        imagePullPolicy: IfNotPresent

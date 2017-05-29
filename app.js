@@ -6,6 +6,7 @@ var http = require('http');
 var cheerio = require('cheerio');
 var nodemailer = require('nodemailer');
 var config = require('./config');
+var _ = require('lodash');
 
 var options = {
     host: 'www.funda.nl',
@@ -64,9 +65,13 @@ var refreshHousingData = function (sendEmail) {
             res.on("end", function () {
                 var $ = cheerio.load(content);
                 $('ul.object-list > li > a.object-media-wrapper ').each(function (index, element) {
-                    if (housingOffers.indexOf(element.attribs.href) < 0) {
-                        console.log(new Date() + " Found new house: " + element.attribs.href);
-                        housingOffers.push(element.attribs.href)
+                    var potentialNewItem = {
+                        date: new Date(),
+                        houseUrl: element.attribs.href
+                    };
+                    if (!_.some(housingOffers, item => item.houseUrl == potentialNewItem.houseUrl)) {
+                        console.log(new Date() + " Found new house: " + potentialNewItem.houseUrl);
+                        housingOffers.push(potentialNewItem);
                         if (sendEmail) {
                             sendEmailFunction(element.attribs.href);
                         }
@@ -97,7 +102,6 @@ stdin.addListener("data", function (d) {
     process.exit();
 });
 
-
 //Express app
 const express = require('express')
 const app = express()
@@ -105,6 +109,10 @@ const app = express()
 app.get('/', function (req, res) {
     res.sendStatus(200);
 })
+
+app.get('/houses', function(req, res) { //sends all housing offers from the beginning
+    res.send(housingOffers);
+});
 
 app.listen(8080, function () {
     console.log('Funda house finder healthcheck works on port 8080!')
