@@ -1,3 +1,5 @@
+# This project is obsolete as websites have implemented new security measures to prevent web crawling
+
 In memory screen scraper of new houses at Funda.nl
 
 # Warning!

@@ -8,6 +8,11 @@ var nodemailer = require('nodemailer');
 var config = require('./config');
 var _ = require('lodash');
 
+if(!config) {
+    console.log("Missing config.js file! Exiting application!");
+    process.exit(1);
+}
+
 var options = {
     host: 'www.funda.nl',
     path: '/huur/amsterdam/+10km/700-1250/sorteer-datum-af/'
@@ -49,34 +54,38 @@ var sendEmailFunction = function (houseUrl) {
 
 var refreshHousingData = function (sendEmail) {
     return function () {
-        console.log(new Date() + " New check in progress");
-
+        console.log(`${new Date()}: New check in progress`);
 
         http.get({
-            host: requestOptionsUrl,
+            hostname: requestOptionsUrl,
             path: requestOptionsPath
         }, function (res) {
             res.setEncoding("utf8");
             var content = "";
-            res.on("data", function (chunk) {
+            res.on("data", chunk => {
                 content += chunk;
             });
-
-            res.on("end", function () {
+            res.on("end", () => {
                 var $ = cheerio.load(content);
-                $('ul.object-list > li > a.object-media-wrapper ').each(function (index, element) {
+                console.log(`${new Date()}: Finished downloading website`);
+                console.log(content);
+                $('div.search-result-header > a ').each(function (index, element) {
                     var potentialNewItem = {
                         date: new Date(),
                         houseUrl: element.attribs.href
                     };
+                    console.log(`${new Date()}: Found potentially new house: ${potentialNewItem.houseUrl}`)
                     if (!_.some(housingOffers, item => item.houseUrl == potentialNewItem.houseUrl)) {
-                        console.log(new Date() + " Found new house: " + potentialNewItem.houseUrl);
+                        console.log(`${new Date()}: Found new house: ${potentialNewItem.houseUrl}`);
                         housingOffers.push(potentialNewItem);
                         if (sendEmail) {
                             sendEmailFunction(element.attribs.href);
                         }
                     }
                 });
+            });
+            res.on('error', error => {
+                console.log(`${new Date()}: ${error}`);
             });
         });
     };

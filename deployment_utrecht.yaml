@@ -14,7 +14,7 @@ spec:
         name: funda-house-finder-image-utrecht
     spec:
       containers:
-      - image: localhost:5000/funda_house_finder:v0.2
+      - image: us.gcr.io/bad-air/funda_house_finder:v0.3
         name: funda-house-finder-utrecht
         resources:
           requests:
